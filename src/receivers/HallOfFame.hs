@@ -49,13 +49,6 @@ import           CSV                ( readSingleColCSV
                                     , writeSingleColCSV
                                     )
 
-
-reactionReceivers :: [ReactionInfo -> DiscordHandler ()]
-reactionReceivers = [ attemptHallOfFame ]
-
-messageReceivers :: [Message -> DiscordHandler ()]
-messageReceivers = [ reactLimit ]
-
 attemptHallOfFame :: ReactionInfo -> DiscordHandler ()
 attemptHallOfFame r = do
     when (isHallOfFameEmote r && notInHallOfFameChannel r) $ do
@@ -110,62 +103,3 @@ putInHallOfFame r = do
                     sendMessageChanEmbed hallOfFameChannel "" embed
                 Left err -> liftIO (putStrLn "Couldn't get link to message") >> pure ()
         Left err -> liftIO (putStrLn "Couldn't find associated message") >> pure ()
-
-createDescription :: Message -> T.Text
-createDescription m = messageText m <> "\n- " <> pingAuthorOf m <> " in " <> linkChannel (messageChannel m)
-
-getImageFromMessage :: Message -> T.Text
-getImageFromMessage m
-  | not . null $ messageAttachments m = attachmentUrl (head $ messageAttachments m)
-  | otherwise = ""
-
-createHallOfFameEmbed :: Message -> DiscordHandler (Either RestCallErrorCode CreateEmbed)
-createHallOfFameEmbed m = do
-    messLinkM <- getMessageLink m
-    case messLinkM of
-        Right messLink -> do
-            let authorName = ""
-            let authorUrl = ""
-            let authorIcon = Nothing
-            let embedTitle = "👑 best of ouw buwwshit"
-            let embedUrl = ""
-            let embedThumbnail = Nothing
-            let embedDescription = (createDescription m <> "\n\n[Original Message](" <> messLink <> ")")
-            let embedFields = []
-            let embedImage = (Just (CreateEmbedImageUrl $ getImageFromMessage m))
-            let embedFooterText = getTimestampFromMessage m
-            let embedFooterIcon = Nothing
-            pure $ Right (CreateEmbed authorName
-                                      authorUrl
-                                      authorIcon
-                                      embedTitle
-                                      embedUrl
-                                      embedThumbnail
-                                      embedDescription
-                                      embedFields
-                                      embedImage
-                                      embedFooterText
-                                      embedFooterIcon )
-        Left err -> pure $ Left err
-
-reactLimit :: Message -> DiscordHandler ()
-reactLimit m = newDevCommand m "reactLimit *([0-9]{1,3})?" $ \captures -> do
-    let parsed = readMaybe (T.unpack $ head captures)
-    case parsed of
-        Nothing -> do
-            i <- liftIO $ readLimit
-            sendMessageChan (messageChannel m)
-                $ "Current limit is at " <> (T.pack $ show i)
-        Just i -> do
-            liftIO $ editLimit i
-            sendMessageChan (messageChannel m) "New Limit Set"
-
-editLimit :: Int -> IO ()
-editLimit i = writeSingleColCSV "reactLim.csv" [T.pack $ show i]
-
-readLimit :: IO Int
-readLimit = do
-    contents <- readSingleColCSV "reactLim.csv"
-    if null contents
-        then writeSingleColCSV "reactLim.csv" ["1"] >> pure 1
-        else pure $ read $ T.unpack $ head contents
