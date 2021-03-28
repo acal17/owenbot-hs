@@ -35,20 +35,19 @@ messageReceivers = concat
      [ {- AprilFools.messageReceivers      -- the AprilFools message receivers MUST be first if active
      , -}
      Admin.receivers
-     , Misc.messageReceivers
+     , Misc.receivers
      , Calc.receivers
      , Helpme.receivers
      , ILA.receivers
      , Inf1A.receivers
-     , HallOfFame.messageReceivers
      , MCServer.receivers
+     , ReactSystem.receivers
      , QuoteSystem.receivers
      ]
 
 reactionAddReceivers :: [ReactionInfo -> DiscordHandler ()]
 reactionAddReceivers = {-AprilFools.reactionReceivers -}concat
-     [ Misc.reactionReceivers
-     , HallOfFame.reactionReceivers
+     [ ReactSystem.reactionReceivers
      , RoleSelfAssign.reactionAddReceivers
      ]
 

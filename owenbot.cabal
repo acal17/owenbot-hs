@@ -43,6 +43,7 @@ library
       MCServer
       Misc
       QuoteSystem
+      ReactSystem
       RoleSelfAssign
       TemplateRE
   other-modules:
